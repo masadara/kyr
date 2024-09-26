@@ -5,37 +5,8 @@ import os
 from operator import itemgetter
 import requests
 from dotenv import load_dotenv
+from src.masks import main_res,cards_mask, top_transactions_mask, currency_rates_mask, stock_prices_mask
 
-main_res = {
-    "greeting": "",
-    "cards": [],
-    "top_transactions": [],
-    "currency_rates": [],
-    "stock_prices": []
-}
-
-cards_mask = {
-    "last_digits": "",
-    "total_spent": 0.00,
-    "cashback": 0.00
-}
-
-top_transactions_mask = {
-    "date": "",
-    "amount": 0.00,
-    "category": "",
-    "description": ""
-}
-
-currency_rates_mask = {
-    "currency": "",
-    "rate": 0.00
-}
-
-stock_prices_mask = {
-    "stock": "",
-    "price": 0.00
-}
 
 def main_func(date_cur: str) -> list[dict]:
     date = datetime.strptime(date_cur, '%Y-%m-%d %H:%M:%S')
@@ -131,9 +102,26 @@ def currency_rates():
         currency_rates_mask_copy["rate"] = currency_data["Value"]
         main_res["currency_rates"].append(currency_rates_mask_copy.copy())
 
+def main_func_events(date_cur, date_from='M',):
+    path_to_xlsx = os.path.join(os.path.dirname(__file__), "..", "data", "operations.xlsx")
+    date = datetime.strptime(date_cur, '%Y-%m-%d')
+    df = pd.read_excel(path_to_xlsx)
+    # print(df.shape)
+    operations_full = df.to_dict(orient="records")
+    result = []
+    date_cur = datetime.strptime(date_cur, '%Y-%m-%d')
+    for item in operations_full:
+        date = datetime.strptime(item.get('Дата операции'), '%d.%m.%Y %H:%M:%S')
+        if date.month == date_cur.month and date.day <= date_cur.day and date.year == date_cur.year and date_from == 'M':
+            result.append(item)
+        elif date_from == 'ALL' and date.day <= date_cur.day and date.month <= date_cur.month and date.year <= date_cur.year:
+            result.append(item)
+        elif date_from == 'Y' and date.year == date_cur.year:
+            result.append(item)
+        elif date.month == date_cur.month and date.day <= date_cur.day and date.year == date_cur.year and date_from == 'W' and date.weekday() == date_cur.weekday():
+            result.append(item)
+    return result
 
-# path_to_xlsx = os.path.join(os.path.dirname(__file__), "..", "data", "operations.xlsx")
-# transactions_full = xlsx_transactions(path_to_xlsx, '02.12.2021 6:44:00')
-# print(transactions_full)
-print(main_func('2021-12-02 6:44:00'))
-print(main_res)
+print(len(main_func_events('2021-12-02', 'ALL')))
+# print(main_func('2021-12-02 6:44:00'))
+# print(main_res)
