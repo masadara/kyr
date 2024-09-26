@@ -114,6 +114,7 @@ def marketstack_api():
         stock_prices_mask_copy["price"] = response.json()["data"][0]["open"]
         main_res["stock_prices"].append(stock_prices_mask_copy.copy())
 
+
 def currency_rates():
     currency_rates_mask_copy = currency_rates_mask
     url = f"https://www.cbr-xml-daily.ru//daily_json.js"
