@@ -11,6 +11,11 @@ from src.masks import (
     top_transactions_mask,
     currency_rates_mask,
     stock_prices_mask,
+    expenses_main,
+    expenses_mask,
+    income_mask,
+    main_res_events,
+    income_main,
 )
 
 
@@ -98,6 +103,7 @@ def marketstack_api():
         stock_prices_mask_copy["stock"] = item
         stock_prices_mask_copy["price"] = response.json()["data"][0]["open"]
         main_res["stock_prices"].append(stock_prices_mask_copy.copy())
+        main_res_events["stock_prices"].append(stock_prices_mask_copy.copy())
 
 
 def currency_rates():
@@ -115,6 +121,7 @@ def currency_rates():
         currency_rates_mask_copy["currency"] = items
         currency_rates_mask_copy["rate"] = currency_data["Value"]
         main_res["currency_rates"].append(currency_rates_mask_copy.copy())
+        main_res_events["currency_rates"].append(currency_rates_mask_copy.copy())
 
 
 def main_func_events(
@@ -173,15 +180,83 @@ def main_func_events(
         ):
             result.append(item)
     total_amount(result)
-    return result
+    main_expenses(result)
+    main_transfers_and_cash(result)
+    main_income(result)
+    main_res_events["expenses"] = expenses_mask
+    main_res_events["income"] = income_mask
+    marketstack_api()
+    currency_rates()
+    return main_res_events
+
 
 def total_amount(operations):
     summ = 0
     for item in operations:
         if item.get("Сумма операции") < 0:
             summ += round(abs(item.get("Сумма операции")))
-    print(summ)
+    expenses_mask["total_amount"] = summ
 
-print(len(main_func_events("2021-12-01", "M")))
+
+def main_expenses(operations):
+    res = []
+    expenses_main_copy = expenses_main
+    expenses_mask_copy = expenses_mask
+    for item in operations:
+        res.append(item.get("Категория"))
+    for item in set(res):
+        expenses_main_copy["category"] = item
+        expenses_mask_copy["main"].append(expenses_main_copy.copy())
+    for i in range(len(expenses_mask_copy["main"])):
+        for item in operations:
+            if (
+                item.get("Категория") == expenses_mask_copy["main"][i]["category"]
+                and item.get("Сумма операции") < 0
+            ):
+                expenses_mask_copy["main"][i]["amount"] += round(
+                    abs(item.get("Сумма операции")), 2
+                )
+    expenses_mask_copy["main"] = sorted(
+        expenses_mask_copy["main"], key=itemgetter("amount"), reverse=True
+    )
+    if len(expenses_mask["main"]) > 6:
+        expenses_mask["main"][6]["category"] = "Остальное"
+        for item in expenses_mask["main"][6:]:
+            # print(expenses_mask['main'][6])
+            expenses_mask["main"][6]["amount"] += item.get("amount")
+        expenses_mask["main"] = expenses_mask["main"][:7]
+
+
+def main_transfers_and_cash(operations):
+    for item in operations:
+        if item.get("Категория") == "Переводы":
+            expenses_mask["transfers_and_cash"][0]["amount"] += abs(
+                item.get("Сумма операции")
+            )
+        elif item.get("Категория") == "Наличные":
+            expenses_mask["transfers_and_cash"][1]["amount"] += abs(
+                item.get("Сумма операции")
+            )
+    expenses_mask["transfers_and_cash"] = sorted(
+        expenses_mask["transfers_and_cash"], key=itemgetter("amount"), reverse=True
+    )
+
+
+def main_income(operations):
+    income_main_copy = income_main
+    income_mask_copy = income_mask
+    for item in operations:
+        if item.get("Сумма операции") > 0:
+            income_mask_copy["total_amount"] += round(item.get("Сумма операции"), 2)
+            income_main_copy["category"] = item.get("Категория")
+            income_main_copy["amount"] = item.get("Сумма операции")
+            income_mask["main"].append(income_main_copy.copy())
+    income_mask_copy["total_amount"] = round(income_mask_copy["total_amount"], 2)
+    income_mask["main"] = sorted(
+        income_mask["main"], key=itemgetter("amount"), reverse=True
+    )
+
+
+print(main_func_events("2021-12-14", "M"))
 # print(main_func('2021-12-02 6:44:00'))
 # print(main_res)

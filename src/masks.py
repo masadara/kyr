@@ -39,10 +39,28 @@ main_res_events = {
 expenses_mask = {
     "total_amount": 0,
     "main": [],
-    "transfers_and_cash": []
+    "transfers_and_cash": [{
+            "category": "Переводы",
+            "amount": 0
+        },
+        {
+            "category": "Наличные",
+            "amount": 0
+        }
+    ]
 }
 
 income_mask = {
     "total_amount": 0,
     "main": []
+}
+
+expenses_main = {
+    "category": '',
+    "amount": 0
+}
+
+income_main = {
+    "category": '',
+    "amount": 0
 }
