@@ -52,8 +52,19 @@ def search_mobile(data: list[dict]) -> list[dict]:
             result.append(item)
     return result
 
+def search_by_name(data: list[dict]) -> list[dict]:
+    '''Функция поиска переводов физлицам'''
+    pattern = re.compile(r"[А-Яа-яЁё ]+\s\w\.")
+    result = []
+    for item in data:
+        if re.search(pattern, str(item.get("Описание"))) and item.get('Категория') == "Переводы":
+            result.append(item)
+    return result
+
+
 
 path_to_xlsx = os.path.join(os.path.dirname(__file__), "..", "data", "operations.xlsx")
 # print(cashback(xlsx_transactions(path_to_xlsx), 2021, 12))
 # print(search('Олеся', xlsx_transactions(path_to_xlsx)))
-print(search_mobile(xlsx_transactions(path_to_xlsx)))
+# print(search_mobile(xlsx_transactions(path_to_xlsx)))
+print(search_by_name(xlsx_transactions(path_to_xlsx)))
