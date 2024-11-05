@@ -33,9 +33,18 @@ def search(query: str, data: list[dict]) -> list[dict]:
             result.append(item)
     return result
 
+def search_mobile(data: list[dict]) -> list[dict]:
+    pattern = re.compile(r'((8|\+7)[\- ]?)?(\(?\d{3}\)?[\- ]?)?[\d\- ]{7,10}')
+    result = []
+    for item in data:
+        if re.search(pattern, str(item.get('Описание'))):
+            result.append(item)
+    return result
+
 
 path_to_xlsx = os.path.join(
         os.path.dirname(__file__), "..", "data", "operations.xlsx"
     )
 # print(cashback(xlsx_transactions(path_to_xlsx), 2021, 12))
-print(search('Олеся', xlsx_transactions(path_to_xlsx)))
+# print(search('Олеся', xlsx_transactions(path_to_xlsx)))
+print(search_mobile(xlsx_transactions(path_to_xlsx)))
