@@ -20,6 +20,7 @@ from src.masks import (
 
 
 def main_func(date_cur: str) -> list[dict]:
+    '''Основная функция для страницы главная'''
     date = datetime.strptime(date_cur, "%Y-%m-%d %H:%M:%S")
     if date.hour < 6 or date.hour >= 21:
         print("Доброй ночи")
@@ -61,6 +62,7 @@ def xlsx_transactions(path: str, date_cur) -> list[dict]:
 
 
 def cards(operations: list[dict]):
+    '''Получение номера карты, общей суммы расходов и кешбэка'''
     cards_mask_copy = cards_mask
     cards_uniq = []
     for item in operations:
@@ -79,6 +81,7 @@ def cards(operations: list[dict]):
 
 
 def top_transactions(operations: list[dict]):
+    '''Функция получения 5 транзакций по сумме платежа'''
     top_transactions_mask_copy = top_transactions_mask
     sorted_operations = sorted(operations, key=itemgetter("Сумма операции"))
     for item in sorted_operations[:5]:
@@ -90,6 +93,7 @@ def top_transactions(operations: list[dict]):
 
 
 def marketstack_api():
+    '''Функция стоимости акций'''
     stock_prices_mask_copy = stock_prices_mask
     load_dotenv()
     API_KEY = os.getenv("API_KEY")
@@ -107,6 +111,7 @@ def marketstack_api():
 
 
 def currency_rates():
+    '''Функция курса валют'''
     currency_rates_mask_copy = currency_rates_mask
     url = f"https://www.cbr-xml-daily.ru//daily_json.js"
     path_to_json = os.path.join(os.path.dirname(__file__), "..", "user_settings.json")
@@ -128,6 +133,7 @@ def main_func_events(
     date_cur,
     date_from="M",
 ):
+    '''Основная функция страницы событий'''
     path_to_xlsx = os.path.join(
         os.path.dirname(__file__), "..", "data", "operations.xlsx"
     )
@@ -137,7 +143,7 @@ def main_func_events(
     operations_full = df.to_dict(orient="records")
     result = []
     date_cur = datetime.strptime(date_cur, "%Y-%m-%d")
-    for item in operations_full:
+    for item in operations_full:                #Получение данных учитывая дату
         date = datetime.strptime(item.get("Дата операции"), "%d.%m.%Y %H:%M:%S")
         if (
             date.month == date_cur.month
@@ -191,6 +197,7 @@ def main_func_events(
 
 
 def total_amount(operations):
+    '''Получение общей суммы расходов'''
     summ = 0
     for item in operations:
         if item.get("Сумма операции") < 0:
@@ -199,6 +206,7 @@ def total_amount(operations):
 
 
 def main_expenses(operations):
+    '''Получение 7 категорий по тратам по убыванию'''
     res = []
     expenses_main_copy = expenses_main
     expenses_mask_copy = expenses_mask
@@ -228,6 +236,7 @@ def main_expenses(operations):
 
 
 def main_transfers_and_cash(operations):
+    '''Получение переводов и наличных'''
     for item in operations:
         if item.get("Категория") == "Переводы":
             expenses_mask["transfers_and_cash"][0]["amount"] += abs(
@@ -243,6 +252,7 @@ def main_transfers_and_cash(operations):
 
 
 def main_income(operations):
+    '''Функция подсчёта общей суммы поступлений'''
     income_main_copy = income_main
     income_mask_copy = income_mask
     for item in operations:
